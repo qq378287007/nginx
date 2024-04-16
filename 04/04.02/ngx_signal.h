@@ -1,6 +1,3 @@
-﻿#ifndef __NGX_SIGNAL_H__
-#define __NGX_SIGNAL_H__
+﻿#pragma once
 
-void mysignal();  
-
-#endif
+void mysignal();

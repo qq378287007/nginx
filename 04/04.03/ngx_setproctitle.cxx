@@ -1,13 +1,13 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h> //env
 
-// #define __USE_GNU //*.c文件需要定义
-#include <unistd.h> //environ
+#include "ngx_setproctitle.h"
 
-static char *g_argv;	   // 指向原始argv+environ的内存空间
-static int g_argv_len = 0; // 原始argv+environ占据内存字节数
-static char *argv_environ; // 指向重新创建的argv+environ的内存空间
+static char *g_argv = nullptr;		 // 指向原始argv+environ的内存空间
+static int g_argv_len = 0;			 // 原始argv+environ占据内存字节数
+static char *argv_environ = nullptr; // 指向重新创建的argv+environ的内存空间
 // 分配内存拷贝命令行参数和环境变量
 void ngx_init_setproctitle(int argc, char **argv)
 {
@@ -37,7 +37,7 @@ void ngx_init_setproctitle(int argc, char **argv)
 }
 void ngx_setproctitle(const char *title)
 {
-	if (title == NULL)
+	if (title == nullptr)
 		return;
 	memset(g_argv, 0, g_argv_len);						  // 原有内存空间argv+environ清空
 	for (int i = 0; i <= g_argv_len - 2 && title[i]; i++) // 更改原有内存空间argv+environ内容，实现进程标题更改
@@ -45,23 +45,7 @@ void ngx_setproctitle(const char *title)
 }
 void ngx_free_setproctitle()
 {
+	// if (argv_environ != nullptr)
 	delete argv_environ;
-	argv_environ = NULL;
+	argv_environ = nullptr;
 }
-
-// argv和environ，占据一段连续内存空间，不能释放（估计系统会处理）
-int main(int argc, char **argv)
-{
-	ngx_init_setproctitle(argc, argv);
-	ngx_setproctitle("setproctitleTest");
-	sleep(10);
-	ngx_free_setproctitle();
-
-	printf("over\n");
-	return 0;
-}
-
-/*
-g++ setproctitleTest.cxx -o setproctitleTest
-ps -ef | grep title
-*/
