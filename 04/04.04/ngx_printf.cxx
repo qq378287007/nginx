@@ -6,6 +6,7 @@
 
 #include "ngx_global.h"
 #include "ngx_macro.h"
+#include "ngx_printf.h"
 
 // 以一个指定的宽度把一个数字显示在buf对应的内存中, 如果实际显示的数字位数 比指定的宽度要小 ,比如指定显示10位，而你实际要显示的只有“1234567”，那结果可能是会显示“   1234567”
 // 当然如果你不指定宽度【参数width=0】，则按实际宽度显示
@@ -18,23 +19,19 @@
 // width:显示内容时，格式化字符%后接的如果是个数字比如%16，那么width=16，所以这个是希望显示的宽度值【如果实际显示的内容不够，则后头用0填充】
 static u_char *ngx_sprintf_num(u_char *buf, u_char *last, uint64_t ui64, u_char zero, uintptr_t hexadecimal, uintptr_t width)
 {
-    // temp[21]
-    u_char *p, temp[NGX_INT64_LEN + 1]; // #define NGX_INT64_LEN   (sizeof("-9223372036854775808") - 1)     = 20   ，注意这里是sizeof是包括末尾的\0，不是strlen；
-    size_t len;
-    uint32_t ui32;
-
     static u_char hex[] = "0123456789abcdef"; // 跟把一个10进制数显示成16进制有关，换句话说和  %xd格式符有关，显示的16进制数中a-f小写
     static u_char HEX[] = "0123456789ABCDEF"; // 跟把一个10进制数显示成16进制有关，换句话说和  %Xd格式符有关，显示的16进制数中A-F大写
 
-    p = temp + NGX_INT64_LEN; // NGX_INT64_LEN = 20,所以 p指向的是temp[20]那个位置，也就是数组最后一个元素位置
+    u_char temp[NGX_INT64_LEN + 1];
+    u_char *p = temp + NGX_INT64_LEN; // NGX_INT64_LEN = 20,所以 p指向的是temp[20]那个位置，也就是数组最后一个元素位置
 
     if (hexadecimal == 0)
     {
-        if (ui64 <= (uint64_t)NGX_MAX_UINT32_VALUE) // NGX_MAX_UINT32_VALUE :最大的32位无符号数：十进制是‭4294967295‬
+        if (ui64 <= (uint64_t)NGX_MAX_UINT32_VALUE)
         {
-            ui32 = (uint32_t)ui64; // 能保存下
-            do                     // 这个循环能够把诸如 7654321这个数字保存成：temp[13]=7,temp[14]=6,temp[15]=5,temp[16]=4,temp[17]=3,temp[18]=2,temp[19]=1
-                                   // 而且的包括temp[0..12]以及temp[20]都是不确定的值
+            uint32_t ui32 = (uint32_t)ui64; // 能保存下
+            do                              // 这个循环能够把诸如 7654321这个数字保存成：temp[13]=7,temp[14]=6,temp[15]=5,temp[16]=4,temp[17]=3,temp[18]=2,temp[19]=1
+                                            // 而且的包括temp[0..12]以及temp[20]都是不确定的值
             {
                 *--p = (u_char)(ui32 % 10 + '0'); // 把屁股后边这个数字拿出来往数组里装，并且是倒着装：屁股后的也往数组下标大的位置装；
             } while (ui32 /= 10);                 // 每次缩小10倍等于去掉屁股后边这个数字
@@ -69,24 +66,17 @@ static u_char *ngx_sprintf_num(u_char *buf, u_char *last, uint64_t ui64, u_char 
         } while (ui64 >>= 4);
     }
 
-    len = (temp + NGX_INT64_LEN) - p; // 得到这个数字的宽度，比如 “7654321”这个数字 ,len = 7
-
-    while (len++ < width && buf < last) // 如果你希望显示的宽度是10个宽度【%12f】，而实际想显示的是7654321，只有7个宽度，那么这里要填充5个0进去到末尾，凑够要求的宽度
-    {
-        *buf++ = zero; // 填充0进去到buffer中（往末尾增加），比如你用格式
-                       // ngx_log_stderr(0, "invalid option: %10d\n", 21);
-                       // 显示的结果是：nginx: invalid option:         21  ---21前面有8个空格，这8个弄个，就是在这里添加进去的；
-    }
-
-    len = (temp + NGX_INT64_LEN) - p; // 还原这个len，也就是要显示的数字的实际宽度【因为上边这个while循环改变了len的值】
+    size_t len = (temp + NGX_INT64_LEN) - p; // 得到这个数字的宽度，比如 “7654321”这个数字 ,len = 7
+    while (len++ < width && buf < last)      // 如果你希望显示的宽度是10个宽度【%12f】，而实际想显示的是7654321，只有7个宽度，那么这里要填充5个0进去到末尾，凑够要求的宽度
+        *buf++ = zero;                       // 填充0进去到buffer中（往末尾增加），比如你用格式
+                                             // ngx_log_stderr(0, "invalid option: %10d\n", 21);
+                                             // 显示的结果是：nginx: invalid option:         21  ---21前面有8个空格，这8个弄个，就是在这里添加进去的；
+    len = (temp + NGX_INT64_LEN) - p;        // 还原这个len，也就是要显示的数字的实际宽度【因为上边这个while循环改变了len的值】
     // 现在还没把实际的数字比如“7654321”往buf里拷贝呢，要准备拷贝
 
     // 如下这个等号是我加的【我认为应该加等号】，nginx源码里并没有加;***********************************************
-    if ((buf + len) >= last) // 发现如果往buf里拷贝“7654321”后，会导致buf不够长【剩余的空间不够拷贝整个数字】
-    {
-        len = last - buf; // 剩余的buf有多少我就拷贝多少
-    }
-
+    if ((buf + len) >= last)        // 发现如果往buf里拷贝“7654321”后，会导致buf不够长【剩余的空间不够拷贝整个数字】
+        len = last - buf;           // 剩余的buf有多少我就拷贝多少
     return ngx_cpymem(buf, p, len); // 把最新buf返回去；
 }
 

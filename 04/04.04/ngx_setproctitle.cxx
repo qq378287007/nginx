@@ -45,7 +45,6 @@ void ngx_setproctitle(const char *title)
 }
 void ngx_free_setproctitle()
 {
-	// if (argv_environ != nullptr)
 	delete argv_environ;
 	argv_environ = nullptr;
 }

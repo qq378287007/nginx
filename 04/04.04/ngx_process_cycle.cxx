@@ -6,9 +6,11 @@
 #include <errno.h>  //errno
 #include <unistd.h>
 
-#include "ngx_process_cycle.h"
 #include "ngx_macro.h"
 #include "ngx_c_conf.h"
+#include "ngx_log.h"
+#include "ngx_setproctitle.h"
+#include "ngx_process_cycle.h"
 
 // 描述：子进程创建时调用本函数进行一些初始化工作
 static void ngx_worker_process_init(int inum)
@@ -36,7 +38,7 @@ static void ngx_worker_process_cycle(int inum, const char *pprocname)
         // printf("worker进程休息1秒");
         // fflush(stdout); //刷新标准输出缓冲区，把输出缓冲区里的东西打印到标准输出设备上，则printf里的东西会立即输出；
         // sleep(1); //休息1秒
-        // usleep(100000);
+        usleep(100000);
         ngx_log_error_core(0, 0, "good--这是子进程，编号为%d, pid为%P！", inum, ngx_pid);
         // printf("1212");
         // if(inum == 1)
@@ -88,7 +90,7 @@ static void ngx_start_worker_processes(int threadnums)
         ngx_spawn_process(i, "worker process");
 }
 
-static u_char master_process[] = "master process";
+static char master_process[] = "master process";
 
 // 描述：创建worker子进程
 void ngx_master_process_cycle()
@@ -117,19 +119,7 @@ void ngx_master_process_cycle()
 
     // 即便sigprocmask失败，程序流程 也继续往下走
 
-    // 首先我设置主进程标题---------begin
-    size_t size = sizeof(master_process); // 注意我这里用的是sizeof，所以字符串末尾的\0是被计算进来了的
-    size += g_argvneedmem;                // argv参数长度加进来
-    if (size < 1000)                      // 长度小于这个，我才设置标题
-    {
-        char title[1000] = {0};
-        strcpy(title, (const char *)master_process); //"master process"
-        strcat(title, " ");                          // 跟一个空格分开一些，清晰    //"master process "
-        for (int i = 0; i < g_os_argc; i++)          //"master process ./nginx"
-            strcat(title, g_os_argv[i]);
-        ngx_setproctitle(title); // 设置标题
-    }
-    // 首先我设置主进程标题---------end
+    ngx_setproctitle(master_process); // 设置标题
 
     // 从配置文件中读取要创建的worker进程数量
     CConfig *p_config = CConfig::GetInstance();                      // 单例类
@@ -143,8 +133,7 @@ void ngx_master_process_cycle()
     // setvbuf(stdout,NULL,_IONBF,0); //这个函数. 直接将printf缓冲区禁止， printf就直接输出了。
     for (;;)
     {
-
-        //    usleep(100000);
+        usleep(100000);
         ngx_log_error_core(0, 0, "haha--这是父进程，pid为%P", ngx_pid);
 
         // a)根据给定的参数设置新的mask 并 阻塞当前进程【因为是个空集，所以不阻塞任何信号】
@@ -153,13 +142,12 @@ void ngx_master_process_cycle()
         // d)信号处理函数返回后，sigsuspend返回，使程序流程继续往下走
         // printf("for进来了！\n"); //发现，如果print不加\n，无法及时显示到屏幕上，是行缓存问题，以往没注意；可参考https://blog.csdn.net/qq_26093511/article/details/53255970
 
-        //    sigsuspend(&set); //阻塞在这里，等待一个信号，此时进程是挂起的，不占用cpu时间，只有收到信号才会被唤醒（返回）；
+        // sigsuspend(&set); //阻塞在这里，等待一个信号，此时进程是挂起的，不占用cpu时间，只有收到信号才会被唤醒（返回）；
         // 此时master进程完全靠信号驱动干活
 
-        //    printf("执行到sigsuspend()下边来了\n");
+        // printf("执行到sigsuspend()下边来了\n");
 
-        ///        printf("master进程休息1秒\n");
+        // printf("master进程休息1秒\n");
         // sleep(1); //休息1秒
-        // 以后扩充.......
     }
 }

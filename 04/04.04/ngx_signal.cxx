@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "ngx_macro.h"
+#include "ngx_log.h"
 #include "ngx_signal.h"
 
 typedef struct // 信号有关的结构
@@ -62,7 +63,7 @@ int ngx_init_signals()
             sa.sa_handler = SIG_IGN; // sa_handler:这个标记SIG_IGN给到sa_handler成员，表示忽略信号的处理程序，否则操作系统的缺省信号处理程序很可能把这个进程杀掉；
                                      // 其实sa_handler和sa_sigaction都是一个函数指针用来表示信号处理程序。只不过这两个函数指针他们参数不一样， sa_sigaction带的参数多，信息量大，
                                      // 而sa_handler带的参数少，信息量少；如果你想用sa_sigaction，那么你就需要把sa_flags设置为SA_SIGINFO；
-        }                            // end if
+        }
 
         sigemptyset(&sa.sa_mask); // 比如咱们处理某个信号比如SIGUSR1信号时不希望收到SIGUSR2信号，那咱们就可以用诸如sigaddset(&sa.sa_mask,SIGUSR2);这样的语句针对信号为SIGUSR1时做处理，这个sigaddset三章五节讲过；
                                   // 这里.sa_mask是个信号集（描述信号的集合），用于表示要阻塞的信号，sigemptyset()这个函数咱们在第三章第五节讲过：把信号集中的所有信号清0，本意就是不准备阻塞任何信号；
@@ -77,9 +78,9 @@ int ngx_init_signals()
         }
         else
         {
-            // ngx_log_error_core(NGX_LOG_EMERG,errno,"sigaction(%s) succed!",sig->signame);     //成功不用写日志
+            // ngx_log_error_core(NGX_LOG_EMERG, errno, "sigaction(%s) succed!", sig->signame);     //成功不用写日志
             ngx_log_stderr(0, "sigaction(%s) succed!", sig->signame); // 直接往屏幕上打印看看 ，不需要时可以去掉
         }
-    }         // end for
-    return 0; // 成功
+    }
+    return 0;
 }

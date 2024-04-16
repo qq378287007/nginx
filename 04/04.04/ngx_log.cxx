@@ -39,6 +39,37 @@ static u_char err_levels[][20] =
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// 描述：给一段内存，一个错误编号，我要组合出一个字符串，形如：   (错误编号: 错误原因)，放到给的这段内存中去
+//     这个函数我改造的比较多，和原始的nginx代码多有不同
+// buf：是个内存，要往这里保存数据
+// last：放的数据不要超过这里
+// err：错误编号，我们是要取得这个错误编号对应的错误字符串，保存到buffer中
+static u_char *ngx_log_errno(u_char *buf, u_char *last, int err)
+{
+    // 以下代码是我自己改造，感觉作者的代码有些瑕疵
+    char *perrorinfo = strerror(err); // 根据资料不会返回NULL;
+    size_t len = strlen(perrorinfo);
+
+    // 然后我还要插入一些字符串： (%d:)
+    char leftstr[10] = {0};
+    sprintf(leftstr, " (%d: ", err);
+    size_t leftlen = strlen(leftstr);
+
+    char rightstr[] = ") ";
+    size_t rightlen = strlen(rightstr);
+
+    size_t extralen = leftlen + rightlen; // 左右的额外宽度
+    if ((buf + len + extralen) < last)
+    {
+        // 保证整个我装得下，我就装，否则我全部抛弃 ,nginx的做法是 如果位置不够，就硬留出50个位置【哪怕覆盖掉以往的有效内容】，也要硬往后边塞，这样当然也可以；
+        buf = ngx_cpymem(buf, leftstr, leftlen);
+        buf = ngx_cpymem(buf, perrorinfo, len);
+        buf = ngx_cpymem(buf, rightstr, rightlen);
+    }
+    return buf;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 // 描述：通过可变参数组合出字符串【支持...省略号形参】，自动往字符串最末尾增加换行符【所以调用者不用加\n】， 往标准错误上输出这个字符串；
 //     如果err不为0，表示有错误，会将该错误编号以及对应的错误信息一并放到组合出的字符串中一起显示；
 
@@ -89,37 +120,6 @@ void ngx_log_stderr(int err, const char *fmt, ...)
     // 测试代码：
     // printf("ngx_log_stderr()处理结果=%s\n",errstr);
     // printf("ngx_log_stderr()处理结果=%s",errstr);=
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-// 描述：给一段内存，一个错误编号，我要组合出一个字符串，形如：   (错误编号: 错误原因)，放到给的这段内存中去
-//     这个函数我改造的比较多，和原始的nginx代码多有不同
-// buf：是个内存，要往这里保存数据
-// last：放的数据不要超过这里
-// err：错误编号，我们是要取得这个错误编号对应的错误字符串，保存到buffer中
-u_char *ngx_log_errno(u_char *buf, u_char *last, int err)
-{
-    // 以下代码是我自己改造，感觉作者的代码有些瑕疵
-    char *perrorinfo = strerror(err); // 根据资料不会返回NULL;
-    size_t len = strlen(perrorinfo);
-
-    // 然后我还要插入一些字符串： (%d:)
-    char leftstr[10] = {0};
-    sprintf(leftstr, " (%d: ", err);
-    size_t leftlen = strlen(leftstr);
-
-    char rightstr[] = ") ";
-    size_t rightlen = strlen(rightstr);
-
-    size_t extralen = leftlen + rightlen; // 左右的额外宽度
-    if ((buf + len + extralen) < last)
-    {
-        // 保证整个我装得下，我就装，否则我全部抛弃 ,nginx的做法是 如果位置不够，就硬留出50个位置【哪怕覆盖掉以往的有效内容】，也要硬往后边塞，这样当然也可以；
-        buf = ngx_cpymem(buf, leftstr, leftlen);
-        buf = ngx_cpymem(buf, perrorinfo, len);
-        buf = ngx_cpymem(buf, rightstr, rightlen);
-    }
-    return buf;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

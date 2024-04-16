@@ -4,14 +4,14 @@
 #define NGX_MAX_ERROR_STR 2048 // 显示的错误信息最大数组长度
 
 // memcpy返回dst指针, ngx_cpymem返回dst+n位置
-#define ngx_cpymem(dst, src, n) (((u_char *)memcpy(dst, src, n)) + (n)) // 注意#define写法，n这里用()包着，防止出现什么错误
+#define ngx_cpymem(dst, src, n) (((u_char *)memcpy(dst, src, n)) + (n))
 
 #define ngx_min(val1, val2) ((val1 > val2) ? (val2) : (val1))
 
+// sizeof含'\0'，strlen不含'\0'
 #define NGX_MAX_UINT32_VALUE (uint32_t)0xffffffff          // 最大的32位无符号数：十进制是4294967295(2^32-1)
 #define NGX_INT64_LEN (sizeof("-9223372036854775808") - 1) // 20, [-2^63, -1] ,[0, 2^63-1]
-// sizeof含'\0'，strlen不含'\0'
-#define NGX_UINT64_LEN (strlen("18446744073709551615")) // 2^64-1
+#define NGX_UINT64_LEN (strlen("18446744073709551615"))    // 2^64-1
 
 // 日志相关--------------------
 // 我们把日志一共分成八个等级【级别从高到低，数字最小的级别最高，数字大的级别最低】，以方便管理、显示、过滤等等
