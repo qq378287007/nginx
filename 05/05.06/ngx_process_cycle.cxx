@@ -9,6 +9,8 @@
 #include "ngx_c_conf.h"
 #include "ngx_log.h"
 #include "ngx_setproctitle.h"
+#include "ngx_global.h"
+#include "ngx_event.h"
 #include "ngx_process_cycle.h"
 
 // 描述：子进程创建时调用本函数进行一些初始化工作
@@ -18,10 +20,14 @@ static void ngx_worker_process_init(int inum)
     sigemptyset(&set);                              // 清空信号集
     if (sigprocmask(SIG_SETMASK, &set, NULL) == -1) // 原来是屏蔽那10个信号【防止fork()期间收到信号导致混乱】，现在不再屏蔽任何信号【接收任何信号】
         ngx_log_error_core(NGX_LOG_ALERT, errno, "ngx_worker_process_init()中sigprocmask()失败!");
+
+    // 如下这些代码参照官方nginx里的ngx_event_process_init()函数中的代码
+    g_socket.ngx_epoll_init(); // 初始化epoll相关内容，同时 往监听socket上增加监听事件，从而开始让监听端口履行其职责
+    // g_socket.ngx_epoll_listenportstart();//往监听socket上增加监听事件，从而开始让监听端口履行其职责【如果不加这行，虽然端口能连上，但不会触发ngx_epoll_process_events()里边的epoll_wait()往下走】
 }
 
 // 描述：worker子进程的功能函数，每个woker子进程，就在这里循环着了（无限循环【处理网络事件和定时器事件以对外提供web服务】）
-//      子进程分叉才会走到之类
+//      子进程分叉才会走到这里
 // inum：进程编号【0开始】
 static void ngx_worker_process_cycle(int inum, const char *pprocname)
 {
@@ -41,7 +47,7 @@ static void ngx_worker_process_cycle(int inum, const char *pprocname)
         // 先sleep一下 以后扩充.......
         // printf("worker进程休息1秒");
         // fflush(stdout); //刷新标准输出缓冲区，把输出缓冲区里的东西打印到标准输出设备上，则printf里的东西会立即输出；
-        sleep(1); // 休息1秒
+        // sleep(1); //休息1秒
         // usleep(100000);
         // ngx_log_error_core(0,0,"good--这是子进程，编号为%d,pid为%P！",inum,ngx_pid);
         // printf("1212");
@@ -56,6 +62,8 @@ static void ngx_worker_process_cycle(int inum, const char *pprocname)
 
         // ngx_log_stderr(0,"good--这是子进程，编号为%d,pid为%P",inum,ngx_pid);
         // ngx_log_error_core(0,0,"good--这是子进程，编号为%d,pid为%P",inum,ngx_pid);
+
+        ngx_process_events_and_timers(); // 处理网络事件和定时器事件
     }
 }
 
@@ -155,5 +163,6 @@ void ngx_master_process_cycle()
         // printf("master进程休息1秒\n");
         // ngx_log_stderr(0,"haha--这是父进程，pid为%P",ngx_pid);
         sleep(1); // 休息1秒
+        // 以后扩充.......
     }
 }
