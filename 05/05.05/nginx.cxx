@@ -1,4 +1,5 @@
-﻿#include <stdio.h>
+﻿
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -11,9 +12,13 @@
 #include "ngx_setproctitle.h"
 #include "ngx_process_cycle.h"
 #include "ngx_daemon.h"
+#include "ngx_c_socket.h"
 
 // 守护进程标记，标记是否启用了守护进程模式，0：未启用，1：启用了
 int g_daemonized = 0;
+
+// socket相关
+CSocekt g_socekt; // socket全局对象
 
 // 和进程本身有关的全局量
 pid_t ngx_pid;    // 当前进程的pid
@@ -49,7 +54,7 @@ int main(int argc, char **argv)
     CConfig *p_config = CConfig::GetInstance(); // 单例类
     if (p_config->Load("nginx.conf") == false)  // 把配置文件内容载入到内存
     {
-        ngx_log_init(); // 初始化日志，否则下行代码无法正常执行
+        ngx_log_init(); // 初始化日志
         ngx_log_stderr(0, "配置文件[%s]载入失败，退出!", "nginx.conf");
         // exit(1);终止进程，在main中出现和return效果一样 ,exit(0)表示程序正常, exit(1)/exit(-1)表示程序异常退出，exit(2)表示表示系统找不到指定的文件
         exitcode = 2; // 标记找不到文件
@@ -65,10 +70,16 @@ int main(int argc, char **argv)
         exitcode = 1;
         goto lblexit;
     }
+    if (g_socekt.Initialize() == false) // 初始化socket
+    {
+        exitcode = 1;
+        goto lblexit;
+    }
 
     //(5)一些不好归类的其他类别的代码，准备放这里
     ngx_init_setproctitle(argc, argv); // 把环境变量搬家
 
+    //------------------------------------
     //(6)创建守护进程
     if (p_config->GetIntDefault("Daemon", 0) == 1) // 读配置文件，拿到配置文件中是否按守护进程方式启动的选项
     {
@@ -83,7 +94,7 @@ int main(int argc, char **argv)
         {
             // 这是原始的父进程
             freeresource(); // 只有进程退出了才goto到 lblexit，用于提醒用户进程退出了
-                            // 而我现在这个情况属于正常fork()守护进程后的正常退出，不应该跑到lblexit()去执行，因为那里有一条打印语句标记整个进程的退出，这里不该显示该条打印语句
+                            // 而我现在这个情况属于正常fork()守护进程后的正常退出，不应该跑到lblexit()去执行，因为那里有一条打印语句标记整个进程的退出，这里不该限制该条打印语句；
             exitcode = 0;
             return exitcode; // 整个进程直接在这里退出
         }
@@ -101,11 +112,12 @@ int main(int argc, char **argv)
     //    printf("休息1秒\n");
     //}
 
+    //--------------------------------------
 lblexit:
     //(5)该释放的资源要释放掉
     freeresource();
 
-    ngx_log_stderr(0, "程序退出，再见了!"); // 先显示信息，下一行才关闭所有资源，顺序不能错，否则本行信息无法输出了
+    ngx_log_stderr(0, "程序退出，再见了!");
     return exitcode;
 }
 
