@@ -1,0 +1,18 @@
+2019/10/06 08:48:47 [info] 1433: 监听80端口成功!
+2019/10/06 08:48:47 [info] 1433: 监听443端口成功!
+2019/10/06 08:48:47 [notice] 1434: master process ./nginx 1434 【master进程】启动并开始运行......!
+2019/10/06 08:48:48 [notice] 1435: worker process 1435 【worker进程】启动并开始运行......!
+2019/10/06 09:04:11 [stderr] 1435: nginx: 成功收到了心跳包并返回结果！
+2019/10/06 09:05:28 [stderr] 1435: nginx: 时间到不发心跳包，踢出去!
+2019/10/06 09:06:19 [stderr] 1435: nginx: 成功收到了心跳包并返回结果！
+2019/10/06 09:06:21 [stderr] 1435: nginx: 成功收到了心跳包并返回结果！
+2019/10/06 09:07:11 [stderr] 1435: nginx: 成功收到了心跳包并返回结果！
+2019/10/06 09:07:13 [stderr] 1435: nginx: 执行了CLogicSocket::_HandleRegister()!
+2019/10/06 09:07:16 [stderr] 1435: nginx: 执行了CLogicSocket::_HandleRegister()!
+2019/10/06 09:07:48 [stderr] 1435: nginx: 成功收到了心跳包并返回结果！
+2019/10/06 09:09:06 [stderr] 1435: nginx: 时间到不发心跳包，踢出去!
+2019/10/06 09:18:08 [notice] 1435: signal 15 (SIGTERM) received from 1
+2019/10/06 09:18:08 [info] 1435: CSocekt::ngx_epoll_process_events()中epoll_wait()失败! (4: Interrupted system call) 
+2019/10/06 09:18:08 [notice] 1434: signal 15 (SIGTERM) received from 1
+2019/10/06 09:18:08 [notice] 1435: signal 1 (SIGHUP) received from 1
+2019/10/06 09:18:08 [notice] 1434: signal 1 (SIGHUP) received from 1

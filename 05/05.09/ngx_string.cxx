@@ -1,53 +1,40 @@
-﻿
-//一些和字符串处理相关的函数，放这里
-/*
-王健伟老师 《Linux C++通讯架构实战》
-商业级质量的代码，完整的项目，帮你提薪至少10K
-*/
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <string.h>
+#include <ctype.h>
+#include "ngx_string.h"
 
-//截取字符串尾部空格
-void Rtrim(char *string)   
-{   
-	size_t len = 0;   
-	if(string == NULL)   
-		return;   
+// 截取字符串尾部空格
+void Rtrim(char *str)
+{
+	if (str == NULL)
+		return;
 
-	len = strlen(string);   
-	while(len > 0 && string[len-1] == ' ')   //位置换一下   
-		string[--len] = 0;   
-	return;   
+	for (size_t len = strlen(str) - 1; len >= 0 && isspace(str[len]); len--)
+		str[len] = 0;
 }
 
-//截取字符串首部空格
-void Ltrim(char *string)
+// 截取字符串首部空格
+void Ltrim(char *str)
 {
-	size_t len = 0;
-	len = strlen(string);   
-	char *p_tmp = string;
-	if( (*p_tmp) != ' ') //不是以空格开头
+	if (str == NULL || !isspace(*str)) // 空字符串或首字符不为空白字符
 		return;
-	//找第一个不为空格的
-	while((*p_tmp) != '\0')
-	{
-		if( (*p_tmp) == ' ')
-			p_tmp++;
-		else
+
+	// 找第一个不为空格的
+	char *p_tmp;
+	for (p_tmp = str; *p_tmp != '\0'; p_tmp++)
+		if (!isspace(*p_tmp))
 			break;
-	}
-	if((*p_tmp) == '\0') //全是空格
+
+	// 全是空格
+	if (*p_tmp == '\0')
 	{
-		*string = '\0';
+		*str = '\0';
 		return;
 	}
-	char *p_tmp2 = string; 
-	while((*p_tmp) != '\0')
-	{
-		(*p_tmp2) = (*p_tmp);
-		p_tmp++;
-		p_tmp2++;
-	}
-	(*p_tmp2) = '\0';
-    return;
+
+	// 非空格赋值
+	char *p_tmp2;
+	for (p_tmp2 = str; *p_tmp != '\0'; p_tmp++, p_tmp2++)
+		*p_tmp2 = *p_tmp;
+	*p_tmp2 = '\0';
 }
