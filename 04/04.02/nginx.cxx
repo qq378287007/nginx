@@ -1,15 +1,15 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
-#include "ngx_c_conf.h" //和配置文件处理相关的类,名字带c_表示和类有关
+#include "ngx_c_conf.h"
 #include "ngx_setproctitle.h"
 
 int main(int argc, char **argv)
 {
-    printf("--------------------------------------------------------\n");
     // 验证argv指向的内存和environ指向的内存紧挨着
+    printf("--------------------------------------------------------\n");
     for (int i = 0; i < argc; i++)
     {
         printf("argv[%02d]地址=%x    ", i, (unsigned int)((unsigned long)argv[i]));
@@ -20,10 +20,11 @@ int main(int argc, char **argv)
         printf("environ[%02d]地址=%x    ", i, (unsigned int)((unsigned long)environ[i]));
         printf("environ[%02d]内容=%s\n", i, environ[i]);
     }
-    printf("--------------------------------------------------------");
+    printf("--------------------------------------------------------\n");
 
     ngx_init_setproctitle(argc, argv); // argv+environ变量搬家
 
+    printf("--------------------------------------------------------\n");
     for (int i = 0; i < argc; i++)
     {
         printf("argv[%02d]地址=%x    ", i, (unsigned int)((unsigned long)argv[i]));
@@ -42,13 +43,13 @@ int main(int argc, char **argv)
     ngx_free_setproctitle();
 
     // 我们在main中，先把配置读出来，供后续使用
+    printf("--------------------------------------------------------\n");
     CConfig *p_config = CConfig::GetInstance(); // 单例类
-    if (p_config->Load("nginx.conf") == false)
-    { // 把配置文件内容载入到内存，配置文件与可执行程序在同一个目录，所以可以直接载入配置文件
+    if (p_config->Load("nginx.conf") == false)  // 把配置文件内容载入到内存
+    {
         printf("配置文件载入失败，退出!\n");
         exit(1);
     }
-
     // 获取配置文件信息的用法
     int port = p_config->GetIntDefault("ListenPort", 0); // 0是缺省值
     printf("port=%d\n", port);
@@ -61,5 +62,5 @@ int main(int argc, char **argv)
     return 0;
 }
 
-//g++ *.cxx & ./a.out
-//ps -ef | grep master
+// g++ *.cxx & ./a.out
+// ps -ef | grep master

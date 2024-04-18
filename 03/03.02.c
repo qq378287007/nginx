@@ -1,7 +1,7 @@
-
 #include <stdio.h>
-#include <unistd.h>
 #include <signal.h>
+#include <unistd.h>
+
 int main(int argc, char *const *argv)
 {
     printf("非常高兴，和大家一起学习本书\n");
@@ -9,11 +9,12 @@ int main(int argc, char *const *argv)
     //系统函数，设置某个信号来的时候的处理程序（用哪个函数来处理）
     signal(SIGHUP, SIG_IGN); //SIG_IGN代表 我要求忽略这个信号，请求操作系统不要执行缺省的该信号处理动作（也就是 不要把本进程杀掉）
 
-    for(;;)
+    while(1)
     {
         sleep(1);
         printf("休息1秒\n");
     }
+    
     printf("程序退出!再见!\n");
     return 0;
 }

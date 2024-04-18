@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <signal.h>
+#include <unistd.h>
 
 // 信号处理函数
 void sig_quit(int signo)
@@ -70,6 +70,7 @@ int main(int argc, char *const *argv)
         if (mysl > 0)
             printf("sleep还没睡够，剩余%d秒\n", mysl);
     }
+    
     printf("再见了!\n");
     return 0;
 }

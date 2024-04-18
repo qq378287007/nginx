@@ -1,7 +1,7 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <signal.h>
+#include <unistd.h>
 
 // 信号处理函数
 void sig_usr(int signo)
@@ -26,13 +26,14 @@ int main(int argc, char *const *argv)
     if (signal(SIGUSR2, sig_usr) == SIG_ERR)
         printf("无法捕捉SIGUSR2信号!\n");
 
-    for (;;)
+    while (1)
     {
         // sleep(1); //休息1秒
         // printf("休息1秒\n");
         int *p = (int *)malloc(sizeof(int));
         free(p);
     }
+
     printf("再见!\n");
     return 0;
 }

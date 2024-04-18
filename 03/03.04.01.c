@@ -1,15 +1,13 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <signal.h>
 #include <errno.h>
+#include <unistd.h>
 
 static int g_mysign = 0;
 
 void muNEfunc(int value)
 {
-    //....其他处理
     g_mysign = value;
-    //....其他处理
 }
 
 void sig_usr(int signo)
@@ -34,13 +32,14 @@ int main(int argc, char *const *argv)
     if (signal(SIGUSR2, sig_usr) == SIG_ERR)
         printf("无法捕捉SIGUSR2信号!\n");
 
-    for (;;)
+    while (1)
     {
         sleep(1); // 休息1秒
         printf("休息1秒\n");
 
         muNEfunc(15);
-        printf("g_mysign=%d\n", g_mysign);
+        printf("g_mysign = %d\n", g_mysign);
     }
+
     return 0;
 }

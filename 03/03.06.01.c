@@ -11,10 +11,10 @@ void sig_usr(int signo)
     {
     case SIGUSR1:
         printf("收到了SIGUSR1信号，进程id=%d!\n", getpid());
-        break;
+        return;
     case SIGCHLD:
         printf("收到了SIGCHLD信号，进程id=%d!\n", getpid());
-        
+
         // 这里学了一个新函数waitpid，有人也用wait,但笔者要求大家掌握和使用waitpid即可
         // 这个waitpid说白了获取子进程的终止状态，这样，子进程就不会成为僵尸进程了
         int status;
@@ -27,7 +27,6 @@ void sig_usr(int signo)
             return;
         // 走到这里，表示  成功，那也return吧
         return;
-        break;
     }
 }
 
@@ -58,11 +57,12 @@ int main(int argc, char *const *argv)
     }
 
     // 现在，父进程和子进程同时开始 运行了
-    for (;;)
+    while (1)
     {
         sleep(1); // 休息1秒
         printf("休息1秒，进程id=%d!\n", getpid());
     }
+
     printf("再见了!\n");
     return 0;
 }

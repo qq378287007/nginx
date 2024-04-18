@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <vector>
-#include "ngx_global.h" 
+#include "ngx_global.h"
 using namespace std;
 
 class CConfig

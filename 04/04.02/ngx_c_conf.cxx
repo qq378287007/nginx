@@ -1,12 +1,9 @@
-﻿// 系统头文件
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
-
-// 自定义头文件
-#include "ngx_c_conf.h" //和配置文件处理相关的类,名字带c_表示和类有关
 #include "ngx_string.h"
+#include "ngx_c_conf.h"
 
 // 静态成员赋值
 CConfig *CConfig::m_instance = NULL;

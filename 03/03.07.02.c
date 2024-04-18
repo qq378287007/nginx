@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -62,15 +62,13 @@ int ngx_daemon()
 
 int main(int argc, char *const *argv)
 {
-    if (ngx_daemon() != 1)
+    if (ngx_daemon() != 1) // 创建守护进程失败，可以做失败后的处理比如写日志等等
     {
-        // 创建守护进程失败，可以做失败后的处理比如写日志等等
         return 1;
     }
-    else
+    else // 创建守护进程成功,执行守护进程中要干的活
     {
-        // 创建守护进程成功,执行守护进程中要干的活
-        for (;;)
+        while (1)
         {
             sleep(1);                                  // 休息1秒
             printf("休息1秒，进程id=%d!\n", getpid()); // 你就算打印也没用，现在标准输出指向黑洞（/dev/null），打印不出任何结果（不显示任何结果）
